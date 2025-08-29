@@ -1,0 +1,16 @@
+.header{
+  font-size: 500px;
+  margin: 0;
+}
+
+.why2{
+  margin-left: 1000px;
+  position: relative;
+  font-size: 100px;
+  margin-top: 0;
+}
+
+.p{
+  display: flex;
+  text-align: center;
+}

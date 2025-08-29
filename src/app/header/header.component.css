@@ -1,0 +1,42 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.logo{
+  cursor: pointer;
+}
+
+.logo img{
+  height: 150px;
+}
+
+.nav {
+  display: flex;
+  gap: 24px;
+}
+
+.nav img{
+  height: 150px;
+  width: 250px;
+  transition: 0.3s;
+}
+
+.nav img:hover{
+  filter: sepia(35%);
+}
+
+.nav a {
+  text-decoration: none;
+  color: #B4B4B4;
+  font-weight: 500;
+}
+
+.activebutton{
+  filter: sepia(100%);
+}
+
+
+
