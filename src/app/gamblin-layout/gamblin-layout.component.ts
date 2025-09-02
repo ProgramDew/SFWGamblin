@@ -145,17 +145,35 @@ export class GamblinLayoutComponent implements OnInit {
       if (symbols1) {
         symbols1.style.transition =
           'transform 5s cubic-bezier(0.33, 1, 0.68, 1)';
-        symbols1.style.transform = 'translateY(-10000px)';
+        {
+          const reel1 = document.getElementById('reel1');
+          if (reel1) {
+            const t1 = this.computeTravel(reel1, symbols1, 0.9);
+            symbols1.style.transform = `translateY(-${t1}px)`;
+          }
+        }
       }
       if (symbols2) {
         symbols2.style.transition =
           'transform 5s cubic-bezier(0.33, 1, 0.68, 1)';
-        symbols2.style.transform = 'translateY(-8000px)';
+        {
+          const reel2El = document.getElementById('reel2');
+          if (reel2El) {
+            const t2 = this.computeTravel(reel2El, symbols2, 0.75);
+            symbols2.style.transform = `translateY(-${t2}px)`;
+          }
+        }
       }
       if (symbols3) {
         symbols3.style.transition =
           'transform 5s cubic-bezier(0.33, 1, 0.68, 1)';
-        symbols3.style.transform = 'translateY(-6000px)';
+        {
+          const reel3El = document.getElementById('reel3');
+          if (reel3El) {
+            const t3 = this.computeTravel(reel3El, symbols3, 0.6);
+            symbols3.style.transform = `translateY(-${t3}px)`;
+          }
+        }
       }
 
       setTimeout(() => {
@@ -187,86 +205,71 @@ export class GamblinLayoutComponent implements OnInit {
 
   checkResults() {
     let jackpot = 0;
+    const highlight = (cells: Array<{ reel: 'reel1'|'reel2'|'reel3'; idx: number }>) => {
+      for (const c of cells) {
+        const reel = document.getElementById(c.reel);
+        if (!reel) continue;
+        const imgs = Array.from(reel.querySelectorAll<HTMLImageElement>('img.symbol-img'));
+        const el = imgs[c.idx];
+        if (el) el.classList.add('win-cell');
+      }
+      setTimeout(() => document.querySelectorAll('.win-cell').forEach((el) => el.classList.remove('win-cell')), 1500);
+    };
     const wins: string[] = [];
+    const rows = this.getVisibleRowIndices();
+    const files = this.getRowFiles(rows);
+    const r1Top = rows.r1.top, r1Mid = rows.r1.mid, r1Bot = rows.r1.bot;
+    const r2Top = rows.r2.top, r2Mid = rows.r2.mid, r2Bot = rows.r2.bot;
+    const r3Top = rows.r3.top, r3Mid = rows.r3.mid, r3Bot = rows.r3.bot;
 
     // Vertikal
-    if (
-      this.symbolsOnReels[40] === this.symbolsOnReels[41] &&
-      this.symbolsOnReels[40] === this.symbolsOnReels[42]
-    ) {
-      document
-        .querySelector('.overlay-line-vertical1')
-        ?.classList.add('reveal');
+    if (files.r1.top === files.r1.mid && files.r1.top === files.r1.bot) {
+      highlight([{ reel: 'reel1', idx: rows.r1.top }, { reel: 'reel1', idx: rows.r1.mid }, { reel: 'reel1', idx: rows.r1.bot }]);
       jackpot++;
-      wins.push(this.symbolsOnReels[40]);
+      wins.push('assets/symbols/' + files.r1.top);
     }
-    if (
-      this.symbolsOnReels2[32] === this.symbolsOnReels2[33] &&
-      this.symbolsOnReels2[32] === this.symbolsOnReels2[34]
-    ) {
-      document
-        .querySelector('.overlay-line-vertical2')
-        ?.classList.add('reveal');
+    if (files.r2.top === files.r2.mid && files.r2.top === files.r2.bot) {
+      highlight([{ reel: 'reel2', idx: rows.r2.top }, { reel: 'reel2', idx: rows.r2.mid }, { reel: 'reel2', idx: rows.r2.bot }]);
       jackpot++;
-      wins.push(this.symbolsOnReels2[32]);
+      wins.push('assets/symbols/' + files.r2.top);
     }
-    if (
-      this.symbolsOnReels3[24] === this.symbolsOnReels3[25] &&
-      this.symbolsOnReels3[24] === this.symbolsOnReels3[26]
-    ) {
-      document
-        .querySelector('.overlay-line-vertical3')
-        ?.classList.add('reveal');
+    if (files.r3.top === files.r3.mid && files.r3.top === files.r3.bot) {
+      highlight([{ reel: 'reel3', idx: rows.r3.top }, { reel: 'reel3', idx: rows.r3.mid }, { reel: 'reel3', idx: rows.r3.bot }]);
       jackpot++;
-      wins.push(this.symbolsOnReels3[24]);
+      wins.push('assets/symbols/' + files.r3.top);
     }
 
     // Horizontal
-    if (
-      this.symbolsOnReels[40] === this.symbolsOnReels2[32] &&
-      this.symbolsOnReels[40] === this.symbolsOnReels3[24]
-    ) {
-      document.querySelector('.overlay-line-top')?.classList.add('reveal');
+    if (files.r1.top === files.r2.top && files.r1.top === files.r3.top) {
+      highlight([{ reel: 'reel1', idx: rows.r1.top }, { reel: 'reel2', idx: rows.r2.top }, { reel: 'reel3', idx: rows.r3.top }]);
       jackpot++;
-      wins.push(this.symbolsOnReels[40]);
+      wins.push('assets/symbols/' + files.r1.top);
     }
-    if (
-      this.symbolsOnReels[41] === this.symbolsOnReels2[33] &&
-      this.symbolsOnReels[41] === this.symbolsOnReels3[25]
-    ) {
-      document.querySelector('.overlay-line-middle')?.classList.add('reveal');
+    if (files.r1.mid === files.r2.mid && files.r1.mid === files.r3.mid) {
+      highlight([{ reel: 'reel1', idx: rows.r1.mid }, { reel: 'reel2', idx: rows.r2.mid }, { reel: 'reel3', idx: rows.r3.mid }]);
       jackpot++;
-      wins.push(this.symbolsOnReels[41]);
+      wins.push('assets/symbols/' + files.r1.mid);
     }
-    if (
-      this.symbolsOnReels[42] === this.symbolsOnReels2[34] &&
-      this.symbolsOnReels[42] === this.symbolsOnReels3[26]
-    ) {
-      document.querySelector('.overlay-line-down')?.classList.add('reveal');
+    if (files.r1.bot === files.r2.bot && files.r1.bot === files.r3.bot) {
+      highlight([{ reel: 'reel1', idx: rows.r1.bot }, { reel: 'reel2', idx: rows.r2.bot }, { reel: 'reel3', idx: rows.r3.bot }]);
       jackpot++;
-      wins.push(this.symbolsOnReels[42]);
+      wins.push('assets/symbols/' + files.r1.bot);
     }
 
     // Diagonal
     if (
-      this.symbolsOnReels[40] === this.symbolsOnReels2[33] &&
-      this.symbolsOnReels[40] === this.symbolsOnReels3[26]
+      files.r1.top === files.r2.mid && files.r1.top === files.r3.bot
     ) {
-      document
-        .querySelector('.overlay-line-diagonal1')
-        ?.classList.add('reveal');
+      highlight([{ reel: 'reel1', idx: rows.r1.top }, { reel: 'reel2', idx: rows.r2.mid }, { reel: 'reel3', idx: rows.r3.bot }]);
       jackpot++;
-      wins.push(this.symbolsOnReels[40]);
+      wins.push('assets/symbols/' + files.r1.top);
     }
     if (
-      this.symbolsOnReels3[24] === this.symbolsOnReels2[33] &&
-      this.symbolsOnReels3[24] === this.symbolsOnReels[42]
+      files.r3.top === files.r2.mid && files.r3.top === files.r1.bot
     ) {
-      document
-        .querySelector('.overlay-line-diagonal2')
-        ?.classList.add('reveal');
+      highlight([{ reel: 'reel3', idx: rows.r3.top }, { reel: 'reel2', idx: rows.r2.mid }, { reel: 'reel1', idx: rows.r1.bot }]);
       jackpot++;
-      wins.push(this.symbolsOnReels3[24]);
+      wins.push('assets/symbols/' + files.r3.top);
     }
 
     if (jackpot === 8) {
@@ -305,22 +308,62 @@ export class GamblinLayoutComponent implements OnInit {
 
   setupNextSpin() {
     this.newPoints = 0;
-    for (let index = 0; index < 3; index++) {
-      this.fixedFirstThree1[index] = this.symbolsOnReels[40 + index];
-    }
+    const rows = this.getVisibleRowIndices();
+    this.fixedFirstThree1[0] = this.symbolsOnReels[rows.r1.top];
+    this.fixedFirstThree1[1] = this.symbolsOnReels[rows.r1.mid];
+    this.fixedFirstThree1[2] = this.symbolsOnReels[rows.r1.bot];
 
-    for (let index = 0; index < 3; index++) {
-      this.fixedFirstThree2[index] = this.symbolsOnReels2[32 + index];
-    }
+    this.fixedFirstThree2[0] = this.symbolsOnReels2[rows.r2.top];
+    this.fixedFirstThree2[1] = this.symbolsOnReels2[rows.r2.mid];
+    this.fixedFirstThree2[2] = this.symbolsOnReels2[rows.r2.bot];
 
-    for (let index = 0; index < 3; index++) {
-      this.fixedFirstThree3[index] = this.symbolsOnReels3[24 + index];
-    }
+    this.fixedFirstThree3[0] = this.symbolsOnReels3[rows.r3.top];
+    this.fixedFirstThree3[1] = this.symbolsOnReels3[rows.r3.mid];
+    this.fixedFirstThree3[2] = this.symbolsOnReels3[rows.r3.bot];
 
     console.log('Neue Startsymbole für nächsten Spin:');
     console.log('Reel1:', this.fixedFirstThree1);
     console.log('Reel2:', this.fixedFirstThree2);
     console.log('Reel3:', this.fixedFirstThree3);
+  }
+
+  // Determine the visible indices for top/middle/bottom rows of each reel
+  private getVisibleRowIndices() {
+    const computeForReel = (reelId: string) => {
+      const reel = document.getElementById(reelId);
+      if (!reel) {
+        return { top: 0, mid: 1, bot: 2 };
+      }
+      const rect = reel.getBoundingClientRect();
+      const targetY = rect.top + rect.height / 2;
+      const imgs = Array.from(
+        reel.querySelectorAll<HTMLImageElement>('img.symbol-img')
+      );
+      if (imgs.length === 0) {
+        return { top: 0, mid: 1, bot: 2 };
+      }
+
+      let midIndex = 0;
+      let best = Number.POSITIVE_INFINITY;
+      for (let i = 0; i < imgs.length; i++) {
+        const r = imgs[i].getBoundingClientRect();
+        const cy = r.top + r.height / 2;
+        const d = Math.abs(cy - targetY);
+        if (d < best) {
+          best = d;
+          midIndex = i;
+        }
+      }
+      const topIndex = Math.max(0, midIndex - 1);
+      const botIndex = Math.min(imgs.length - 1, midIndex + 1);
+      return { top: topIndex, mid: midIndex, bot: botIndex };
+    };
+
+    return {
+      r1: computeForReel('reel1'),
+      r2: computeForReel('reel2'),
+      r3: computeForReel('reel3'),
+    };
   }
 
   private getSymbolFromPath(path: string) {
@@ -367,4 +410,161 @@ export class GamblinLayoutComponent implements OnInit {
 
     winsound.play();
   }
+
+  // Compute travel distance based on actual DOM sizes to avoid overshooting on small screens
+  private computeTravel(reelEl: HTMLElement, symbolsEl: HTMLElement, factor: number) {
+    const reelRect = reelEl.getBoundingClientRect();
+    const imgs = symbolsEl.querySelectorAll("img.symbol-img");
+    const imgH = imgs.length ? imgs[0].getBoundingClientRect().height : 100;
+    const total = imgH * imgs.length;
+    const maxTravel = Math.max(0, total - reelRect.height);
+    // Snap travel to whole symbol heights to avoid partial rows
+    const raw = Math.max(0, Math.min(maxTravel, maxTravel * factor));
+    const steps = Math.max(1, Math.floor(raw / imgH));
+    return steps * imgH;
+  }
+
+  private getLineThicknessPx() {
+    const mach = document.querySelector('.slot-machine') as HTMLElement | null;
+    const w = mach ? mach.getBoundingClientRect().width : 600;
+    return Math.max(4, Math.min(25, Math.round(w * 0.025)));
+  }
+
+  private getRects() {
+    const machine = document.querySelector('.slot-machine') as HTMLElement | null;
+    const slots = document.querySelector('.slots') as HTMLElement | null;
+    if (!machine || !slots) return null as any;
+    return { machineRect: machine.getBoundingClientRect(), slotsRect: slots.getBoundingClientRect() };
+  }
+
+  private centerXOf(reelId: string) {
+    const reel = document.getElementById(reelId);
+    if (!reel) return 0;
+    const r = reel.getBoundingClientRect();
+    return r.left + r.width / 2;
+  }
+
+  private rowCenterY(row: 'top'|'mid'|'bot') {
+    const rows = this.getVisibleRowIndices();
+    const reel = document.getElementById('reel2'); // use middle reel for Y
+    if (!reel) return 0;
+    const imgs = Array.from(reel.querySelectorAll<HTMLImageElement>('img.symbol-img'));
+    const idx = row === 'top' ? rows.r2.top : row === 'mid' ? rows.r2.mid : rows.r2.bot;
+    const el = imgs[idx] || imgs[0];
+    if (!el) return 0;
+    const r = el.getBoundingClientRect();
+    return r.top + r.height / 2;
+  }
+
+  private positionHorizontal(selector: string, row: 'top'|'mid'|'bot') {
+    const rects = this.getRects();
+    if (!rects) return;
+    const { machineRect, slotsRect } = rects;
+    const y = this.rowCenterY(row);
+    const thick = this.getLineThicknessPx();
+    const el = document.querySelector(selector) as HTMLElement | null;
+    if (!el) return;
+    el.style.left = `${Math.round(slotsRect.left - machineRect.left)}px`;
+    el.style.width = `${Math.round(slotsRect.width)}px`;
+    el.style.top = `${Math.round(y - machineRect.top - thick / 2)}px`;
+    el.style.height = `${thick}px`;
+  }
+
+  private positionVertical(selector: string, reelId: 'reel1'|'reel2'|'reel3') {
+    const rects = this.getRects();
+    if (!rects) return;
+    const { machineRect, slotsRect } = rects;
+    const x = this.centerXOf(reelId);
+    const thick = this.getLineThicknessPx();
+    const el = document.querySelector(selector) as HTMLElement | null;
+    if (!el) return;
+    el.style.top = `${Math.round(slotsRect.top - machineRect.top)}px`;
+    el.style.height = `${Math.round(slotsRect.height)}px`;
+    el.style.left = `${Math.round(x - machineRect.left - thick / 2)}px`;
+    el.style.width = `${thick}px`;
+  }
+
+
+  private positionDiagonal(selector: string, startReel: 'reel1'|'reel2'|'reel3', startRow: 'top'|'mid'|'bot', endReel: 'reel1'|'reel2'|'reel3', endRow: 'top'|'mid'|'bot') {
+    const rects = this.getRects();
+    if (!rects) return;
+    const { machineRect } = rects;
+    const x1 = this.centerXOf(startReel) - machineRect.left;
+    const y1 = this.rowCenterY(startRow) - machineRect.top;
+    const x2 = this.centerXOf(endReel) - machineRect.left;
+    const y2 = this.rowCenterY(endRow) - machineRect.top;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    const thick = this.getLineThicknessPx();
+    const el = document.querySelector(selector) as HTMLElement | null;
+    if (!el) return;
+    el.style.left = `${Math.round(x1 - thick / 2)}px`;
+    el.style.top = `${Math.round(y1)}px`;
+    el.style.width = `${thick}px`;
+    el.style.height = `${Math.round(len)}px`;
+    el.style.transformOrigin = 'top center';
+    el.style.transform = `rotate(${angle}deg)`;
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.repositionOverlays();
+  }
+
+  private repositionOverlays() {
+    // Always compute positions so lines stay correct across resizes
+    this.positionHorizontal('.overlay-line-top','top');
+    this.positionHorizontal('.overlay-line-middle','mid');
+    this.positionHorizontal('.overlay-line-down','bot');
+    this.positionVertical('.overlay-line-vertical1','reel1');
+    this.positionVertical('.overlay-line-vertical2','reel2');
+    this.positionVertical('.overlay-line-vertical3','reel3');
+    this.positionDiagonal('.overlay-line-diagonal1','reel1','top','reel3','bot');
+    this.positionDiagonal('.overlay-line-diagonal2','reel3','top','reel1','bot');
+  }
+
+  private getFileNameFromImg(img: HTMLImageElement | null): string {
+    if (!img) return '';
+    const src = img.getAttribute('src') || (img as any).src || '';
+    const file = src.split('/').pop() || '';
+    return file.split('?' )[0];
+  }
+
+  private getRowFiles(rows: { r1: {top:number,mid:number,bot:number}, r2: {top:number,mid:number,bot:number}, r3: {top:number,mid:number,bot:number} }) {
+  const el = (id: string) => document.getElementById(id);
+  const imgsFor = (id: string) => {
+    const nodeList = el(id)?.querySelectorAll<HTMLImageElement>('img.symbol-img');
+    return nodeList ? Array.from(nodeList) as HTMLImageElement[] : [] as HTMLImageElement[];
+  };
+  const r1 = imgsFor('reel1');
+  const r2 = imgsFor('reel2');
+  const r3 = imgsFor('reel3');
+  return {
+    r1: {
+      top: this.getFileNameFromImg(r1[rows.r1.top] || null),
+      mid: this.getFileNameFromImg(r1[rows.r1.mid] || null),
+      bot: this.getFileNameFromImg(r1[rows.r1.bot] || null),
+    },
+    r2: {
+      top: this.getFileNameFromImg(r2[rows.r2.top] || null),
+      mid: this.getFileNameFromImg(r2[rows.r2.mid] || null),
+      bot: this.getFileNameFromImg(r2[rows.r2.bot] || null),
+    },
+    r3: {
+      top: this.getFileNameFromImg(r3[rows.r3.top] || null),
+      mid: this.getFileNameFromImg(r3[rows.r3.mid] || null),
+      bot: this.getFileNameFromImg(r3[rows.r3.bot] || null),
+    },
+  };
 }
+}
+
+
+
+
+
+
+
+

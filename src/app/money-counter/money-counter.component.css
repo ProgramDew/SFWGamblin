@@ -1,0 +1,75 @@
+/* Fixed overlay in bottom-right corner, above other UI */
+.money-counter {
+  position: fixed;
+  /* Respect iOS/Android safe areas when docked in a corner */
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 1000;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  font-weight: 600;
+  line-height: 1;
+
+  /* Subtle transparency by default */
+  opacity: 0.5;
+
+  /* Large by default for desktop/TV */
+  font-size: 5rem;
+
+  /* Prevent overflow on narrow screens */
+  max-width: 90vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.money-counter .label {
+  opacity: 0.85;
+}
+
+.money-counter .value {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Responsiveness: scale down gracefully on smaller viewports */
+@media (max-width: 1200px) {
+  .money-counter {
+    font-size: 4rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .money-counter {
+    font-size: 3rem;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 768px) {
+  .money-counter {
+    font-size: 2rem;
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .money-counter {
+    font-size: 1.25rem;
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  .money-counter .label {
+    opacity: 0.8;
+  }
+}

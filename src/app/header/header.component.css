@@ -3,6 +3,9 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  gap: 16px;
+  padding: 8px 12px;
+  box-sizing: border-box;
 }
 
 .logo{
@@ -10,7 +13,7 @@
 }
 
 .logo img{
-  height: 150px;
+  height: clamp(48px, 12vw, 150px);
 }
 
 .nav {
@@ -19,8 +22,8 @@
 }
 
 .nav img{
-  height: 150px;
-  width: 250px;
+  height: clamp(40px, 10vw, 120px);
+  width: auto;
   transition: 0.3s;
 }
 
@@ -36,6 +39,18 @@
 
 .activebutton{
   filter: sepia(100%);
+}
+
+/* Stack on small screens */
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+  }
+  .nav {
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 
