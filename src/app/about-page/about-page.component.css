@@ -1,8 +1,10 @@
 .all{
   margin: 0;
+  padding: 16px;
+  text-align: center;
 }
 
 .made{
-  font-size: 100px;
+  font-size: clamp(24px, 8vw, 80px);
   margin: 0;
 }
