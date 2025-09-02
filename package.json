@@ -9,6 +9,12 @@
     "test": "ng test",
     "serve:ssr:angular": "node dist/angular/server/server.mjs"
   },
+  "scripts": {
+  "build:gh": "ng build --configuration production --base-href '/SFWGamblin/'",
+  "postbuild:gh": "cp src/index.html src/404.html",
+  "deploy:gh": "npm run build:gh && npx angular-cli-ghpages --dir=dist/angular/browser"
+  },
+
   "private": true,
   "dependencies": {
     "@angular/common": "^19.2.0",
