@@ -87,7 +87,7 @@
 
 
 .points {
-  position: fixed;
+  position: absolute;
   font-size: clamp(48px, 20vw, 600px);
   font-family: "Perpetua Titling MT", sans-serif;
   color: #b6bfc1;
@@ -95,11 +95,14 @@
   opacity: 0;
   pointer-events: none;
   transition: 0.5s;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 
 .new-points {
-  position: fixed;
+  position: absolute;
   font-size: clamp(24px, 8vw, 250px);
   font-family: "Perpetua Titling MT", sans-serif;
   color: #b6bfc1;
@@ -107,7 +110,9 @@
   opacity: 0;
   pointer-events: none;
   transition: 0.2s;
-  top: -30px;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -120%);
 }
 
 .points.reveal {
@@ -319,15 +324,7 @@ img.symbol-img {
   transition: 0.4s;
 }
 
-.spins {
-  text-align: center;
-  z-index: 9999;
-  opacity: 0.5;
-  font-size: clamp(14px, 6vw, 100px);
-  padding: 0;
-  margin: 4px 0 0 0;
-  margin-bottom: 1rem;
-}
+/* spins styles moved to SpinsCounterComponent */
 
 
 /* === Overlay Grundsetup === */

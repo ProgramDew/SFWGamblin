@@ -11,11 +11,13 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SYMBOLS } from './symbols';
+import { SpinsCounterComponent } from '../spins-counter/spins-counter.component';
 import { withModule } from '@angular/core/testing';
+import { MoneyCounterComponent } from '../money-counter/money-counter.component';
 
 @Component({
   selector: 'app-gamblin-layout',
-  imports: [CommonModule],
+  imports: [CommonModule, SpinsCounterComponent, MoneyCounterComponent],
   templateUrl: './gamblin-layout.component.html',
   styleUrl: './gamblin-layout.component.css',
 })

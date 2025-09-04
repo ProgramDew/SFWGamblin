@@ -1,21 +1,18 @@
 {
   "name": "angular",
   "version": "19.2.0",
+  "private": true,
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:angular": "node dist/angular/server/server.mjs"
+    "serve:ssr:angular": "node dist/angular/server/server.mjs",
+    "build:gh": "ng build --configuration production --output-mode=static --prerender=false --base-href=/",
+    "postbuild:gh": "node -e \"require('fs').copyFileSync('dist/angular/browser/index.html','dist/angular/browser/404.html')\"",
+    "deploy:gh": "npm run build:gh && npx angular-cli-ghpages --dir=dist/angular/browser --cname=sfwgamblin.space"
   },
-  "scripts": {
-  "build:gh": "ng build --configuration production --base-href '/SFWGamblin/'",
-  "postbuild:gh": "cp src/index.html src/404.html",
-  "deploy:gh": "npm run build:gh && npx angular-cli-ghpages --dir=dist/angular/browser"
-  },
-
-  "private": true,
   "dependencies": {
     "@angular/common": "^19.2.0",
     "@angular/compiler": "^19.2.0",

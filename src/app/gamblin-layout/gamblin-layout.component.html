@@ -38,8 +38,14 @@
     <div class="start" id="start">
       <button (click)="spin()" [disabled]="isSpinning"></button>
     </div>
+    <div class="stakes-control">
+      <button class="decrease">-</button>
+      <span>Stake</span>
+      <button class="increase">+</button>
+    </div>
   </div>
-  <div class="spins">{{ spins }}</div>
+  <app-spins-counter [count]="spins"></app-spins-counter>
+  <app-money-counter></app-money-counter>
 </div>
 <div class="jackpot-overlay" [class.active]="jackpotActive" aria-hidden="true">
   <div class="burst"></div>

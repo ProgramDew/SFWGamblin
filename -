@@ -5,11 +5,9 @@
 
 html {
   height: 100%;
-  overflow-x: clip;
 }
 
 body {
-  overflow-x: clip;
   font-family: 'Perpetua Titling MT';
   background-image: url(assets/background.gif);
   background-size: contain;
