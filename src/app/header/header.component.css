@@ -8,11 +8,11 @@
   box-sizing: border-box;
 }
 
-.logo{
+.logo {
   cursor: pointer;
 }
 
-.logo img{
+.logo img {
   height: clamp(48px, 12vw, 150px);
 }
 
@@ -21,13 +21,13 @@
   gap: 24px;
 }
 
-.nav img{
+.nav img {
   height: clamp(40px, 10vw, 120px);
   width: auto;
   transition: 0.3s;
 }
 
-.nav img:hover{
+.nav img:hover {
   filter: sepia(35%);
 }
 
@@ -37,7 +37,23 @@
   font-weight: 500;
 }
 
-.activebutton{
+.tab-button {
+  color: #e6e6e6;
+  cursor: pointer;
+  transition: 0.2s;
+  position: absolute;
+}
+
+.tab-button img {
+  width: 3rem;
+  height: 3rem;
+}
+
+.tab-button:hover {
+  filter: brightness(1.1);
+}
+
+.activebutton {
   filter: sepia(100%);
 }
 
@@ -46,12 +62,10 @@
   .header {
     flex-direction: column;
   }
+
   .nav {
     gap: 12px;
     flex-wrap: wrap;
     justify-content: center;
   }
 }
-
-
-

@@ -598,11 +598,11 @@ img.symbol-img {
   inset: 0;
   display: grid;
   place-items: center;
-  pointer-events: none;
   z-index: 10000;
   opacity: 0;
   transition: opacity .3s ease;
   background: radial-gradient(ellipse at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.8) 100%);
+
 }
 .broke-overlay.active { opacity: 1; animation: broke-flash 280ms ease-out; }
 @keyframes broke-flash {
@@ -790,6 +790,23 @@ img.symbol-img {
   color: #a62c37;
 }
 .summary-actions button.secondary:hover { filter: brightness(1.03); }
+
+
+
+.keepgamblin-flash {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 10020;
+  pointer-events: none;
+}
+.keepgamblin-flash img {
+  max-width: min(85vw, 700px);
+  max-height: min(85vh, 700px);
+  width: auto;
+  height: auto;
+}
 
 
 

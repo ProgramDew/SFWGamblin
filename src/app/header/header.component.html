@@ -1,9 +1,14 @@
 <header class="header">
-  <div class="logo" routerLink="/slot-machine">
-    <img src="assets/SFWLogo.png" alt="Logo" />
+  <div class="logo" >
+    <img src="assets/SFWLogo.png" alt="Logo" routerLink="/slot-machine"/>
+    <a class="tab-button" (click)="openPatchNotes()"><img src="assets/new.png" alt=""></a>
   </div>
+  
   <nav class="nav">
     <a routerLink="/about" routerLinkActive="activebutton"> <img src="assets/About.png" alt="" /></a>
     <a routerLink="/why" routerLinkActive="activebutton"><img src="assets/Why.png" alt="" /></a>
+    <!-- <button class="tab-button" type="button" (click)="openPatchNotes()">
+      <img src="assets/new.png" alt="">
+    </button> -->
   </nav>
 </header>

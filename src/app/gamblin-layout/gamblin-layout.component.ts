@@ -66,6 +66,9 @@ export class GamblinLayoutComponent implements OnInit {
   outofmoney = new Audio();
   playagain = new Audio();
   thehousealwayswins = new Audio();
+  
+
+  
   increaseStake() {
     if (this.isSpinning) return;
 
@@ -162,10 +165,36 @@ export class GamblinLayoutComponent implements OnInit {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
-    if (event.code === 'Space') {
+    if (event.code === 'Space' || event.code === 'Enter') {
+      event.preventDefault();
+      if (!this.isSpinning && this.showSummaryModal == false && this.brokeActive == false) {
+        this.spin();
+      }
+    }
+    if (event.code === 'ArrowRight') {
       event.preventDefault();
       if (!this.isSpinning) {
-        this.spin();
+        this.increaseStake();
+      }
+    }
+    if (event.code === 'ArrowLeft') {
+      event.preventDefault();
+      if (!this.isSpinning) {
+        this.decreaseStake();
+      }
+    }
+
+    if (event.code === 'ArrowUp') {
+      event.preventDefault();
+      if (!this.isSpinning) {
+        this.stake = this.stakeMax;
+      }
+    }
+
+    if (event.code === 'ArrowDown') {
+      event.preventDefault();
+      if (!this.isSpinning) {
+        this.stake = this.stakeMin;
       }
     }
   }
@@ -381,6 +410,9 @@ export class GamblinLayoutComponent implements OnInit {
   private jackpotTimer?: any;
   brokeActive = false;
   private brokeTimer?: any;
+  // Quick "keep gamblin" flash overlay state
+  showKeepGamblinFlash = false;
+  private keepGamblinTimer?: any;
 
   private triggerJackpot(durationMs = 2500) {
     this.jackpotActive = true;
@@ -493,6 +525,11 @@ export class GamblinLayoutComponent implements OnInit {
     winSound.src = 'assets/win.mp3';
     jackpotSound.src = 'assets/jackpot.mp3';
 
+    // Pre-check: on no-win, we may flash the encouragement overlay
+    if (!wins || wins.length === 0) {
+      this.maybeFlashKeepGamblin();
+    }
+
     // No wins → no payout
     if (!wins || wins.length === 0) {
       return;
@@ -542,6 +579,19 @@ export class GamblinLayoutComponent implements OnInit {
     }, 600);
 
     winSound.play();
+  }
+
+  // 1-in-20 chance to show a short encouragement flash when there is no win
+  private maybeFlashKeepGamblin() {
+    try {
+      if (Math.floor(Math.random() * 21) === 0) {
+        this.showKeepGamblinFlash = true;
+        clearTimeout(this.keepGamblinTimer);
+        this.keepGamblinTimer = setTimeout(() => {
+          this.showKeepGamblinFlash = false;
+        }, 100);
+      }
+    } catch {}
   }
 
   // Compute travel distance based on actual DOM sizes to avoid overshooting on small screens
