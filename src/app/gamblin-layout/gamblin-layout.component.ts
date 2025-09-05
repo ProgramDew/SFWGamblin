@@ -58,9 +58,21 @@ export class GamblinLayoutComponent implements OnInit {
   summarySpins = 0;
   summaryLoss = 0;
 
+
+  increaseSound = new Audio();
+  decreaseSound = new Audio();
+
+  newMoney = new Audio();
+  outofmoney = new Audio();
+  playagain = new Audio();
+  thehousealwayswins = new Audio();
   increaseStake() {
     if (this.isSpinning) return;
-    if (this.stake === 1 && this.money != 0){
+
+    this.increaseSound.src = 'assets/increase.mp3';
+    this.increaseSound.play();
+
+    if (this.stake === 1 && this.money != 0) {
       this.stake = this.stake + 9;
       return
     }
@@ -69,9 +81,11 @@ export class GamblinLayoutComponent implements OnInit {
 
   decreaseStake() {
     if (this.isSpinning) return;
+    this.decreaseSound.src = 'assets/decrease.mp3';
+    this.decreaseSound.play();
     if (this.money === 0) this.stakeMin = 0;
     this.stake = Math.max(this.stakeMin, this.stake - this.stakeStep);
-    
+
   }
 
   onStakeChange() {
@@ -157,7 +171,7 @@ export class GamblinLayoutComponent implements OnInit {
   }
 
   spin() {
-    if (this.stake > this.money || this.money === 0 || this.stake === 0){
+    if (this.stake > this.money || this.money === 0 || this.stake === 0) {
       if (this.money === 0) {
         this.triggerBroke();
       }
@@ -274,7 +288,7 @@ export class GamblinLayoutComponent implements OnInit {
 
   checkResults() {
     let jackpot = 0;
-    const highlight = (cells: Array<{ reel: 'reel1'|'reel2'|'reel3'; idx: number }>) => {
+    const highlight = (cells: Array<{ reel: 'reel1' | 'reel2' | 'reel3'; idx: number }>) => {
       for (const c of cells) {
         const reel = document.getElementById(c.reel);
         if (!reel) continue;
@@ -381,8 +395,10 @@ export class GamblinLayoutComponent implements OnInit {
     try {
       const loseSound = new Audio();
       loseSound.src = 'assets/loose.mp3';
-      loseSound.play().catch(() => {});
-    } catch {}
+      this.outofmoney.src = 'assets/outofmoney.mp3';
+      this.outofmoney.play().catch(() => { });
+      loseSound.play().catch(() => { });
+    } catch { }
     this.brokeActive = true;
     clearTimeout(this.brokeTimer);
     this.brokeTimer = setTimeout(() => {
@@ -514,7 +530,7 @@ export class GamblinLayoutComponent implements OnInit {
 
     // 5) Apply stake (final multiplier)
     const stakeMultiplier = Math.max(this.stakeMin, this.stake);
-    totalPayout *=  Math.floor(stakeMultiplier/3.5)+1;
+    totalPayout *= Math.floor(stakeMultiplier / 3.5) + 1;
 
     // 6) Update UI counters and balance
     this.newPoints = totalPayout; // used for the on-screen +money animation
@@ -561,7 +577,7 @@ export class GamblinLayoutComponent implements OnInit {
     return r.left + r.width / 2;
   }
 
-  private rowCenterY(row: 'top'|'mid'|'bot') {
+  private rowCenterY(row: 'top' | 'mid' | 'bot') {
     const rows = this.getVisibleRowIndices();
     const reel = document.getElementById('reel2'); // use middle reel for Y
     if (!reel) return 0;
@@ -573,7 +589,7 @@ export class GamblinLayoutComponent implements OnInit {
     return r.top + r.height / 2;
   }
 
-  private positionHorizontal(selector: string, row: 'top'|'mid'|'bot') {
+  private positionHorizontal(selector: string, row: 'top' | 'mid' | 'bot') {
     const rects = this.getRects();
     if (!rects) return;
     const { machineRect, slotsRect } = rects;
@@ -587,7 +603,7 @@ export class GamblinLayoutComponent implements OnInit {
     el.style.height = `${thick}px`;
   }
 
-  private positionVertical(selector: string, reelId: 'reel1'|'reel2'|'reel3') {
+  private positionVertical(selector: string, reelId: 'reel1' | 'reel2' | 'reel3') {
     const rects = this.getRects();
     if (!rects) return;
     const { machineRect, slotsRect } = rects;
@@ -602,7 +618,7 @@ export class GamblinLayoutComponent implements OnInit {
   }
 
 
-  private positionDiagonal(selector: string, startReel: 'reel1'|'reel2'|'reel3', startRow: 'top'|'mid'|'bot', endReel: 'reel1'|'reel2'|'reel3', endRow: 'top'|'mid'|'bot') {
+  private positionDiagonal(selector: string, startReel: 'reel1' | 'reel2' | 'reel3', startRow: 'top' | 'mid' | 'bot', endReel: 'reel1' | 'reel2' | 'reel3', endRow: 'top' | 'mid' | 'bot') {
     const rects = this.getRects();
     if (!rects) return;
     const { machineRect } = rects;
@@ -612,7 +628,7 @@ export class GamblinLayoutComponent implements OnInit {
     const y2 = this.rowCenterY(endRow) - machineRect.top;
     const dx = x2 - x1;
     const dy = y2 - y1;
-    const len = Math.sqrt(dx*dx + dy*dy);
+    const len = Math.sqrt(dx * dx + dy * dy);
     const angle = Math.atan2(dy, dx) * 180 / Math.PI;
     const thick = this.getLineThicknessPx();
     const el = document.querySelector(selector) as HTMLElement | null;
@@ -632,50 +648,50 @@ export class GamblinLayoutComponent implements OnInit {
 
   private repositionOverlays() {
     // Always compute positions so lines stay correct across resizes
-    this.positionHorizontal('.overlay-line-top','top');
-    this.positionHorizontal('.overlay-line-middle','mid');
-    this.positionHorizontal('.overlay-line-down','bot');
-    this.positionVertical('.overlay-line-vertical1','reel1');
-    this.positionVertical('.overlay-line-vertical2','reel2');
-    this.positionVertical('.overlay-line-vertical3','reel3');
-    this.positionDiagonal('.overlay-line-diagonal1','reel1','top','reel3','bot');
-    this.positionDiagonal('.overlay-line-diagonal2','reel3','top','reel1','bot');
+    this.positionHorizontal('.overlay-line-top', 'top');
+    this.positionHorizontal('.overlay-line-middle', 'mid');
+    this.positionHorizontal('.overlay-line-down', 'bot');
+    this.positionVertical('.overlay-line-vertical1', 'reel1');
+    this.positionVertical('.overlay-line-vertical2', 'reel2');
+    this.positionVertical('.overlay-line-vertical3', 'reel3');
+    this.positionDiagonal('.overlay-line-diagonal1', 'reel1', 'top', 'reel3', 'bot');
+    this.positionDiagonal('.overlay-line-diagonal2', 'reel3', 'top', 'reel1', 'bot');
   }
 
   private getFileNameFromImg(img: HTMLImageElement | null): string {
     if (!img) return '';
     const src = img.getAttribute('src') || (img as any).src || '';
     const file = src.split('/').pop() || '';
-    return file.split('?' )[0];
+    return file.split('?')[0];
   }
 
-  private getRowFiles(rows: { r1: {top:number,mid:number,bot:number}, r2: {top:number,mid:number,bot:number}, r3: {top:number,mid:number,bot:number} }) {
-  const el = (id: string) => document.getElementById(id);
-  const imgsFor = (id: string) => {
-    const nodeList = el(id)?.querySelectorAll<HTMLImageElement>('img.symbol-img');
-    return nodeList ? Array.from(nodeList) as HTMLImageElement[] : [] as HTMLImageElement[];
-  };
-  const r1 = imgsFor('reel1');
-  const r2 = imgsFor('reel2');
-  const r3 = imgsFor('reel3');
-  return {
-    r1: {
-      top: this.getFileNameFromImg(r1[rows.r1.top] || null),
-      mid: this.getFileNameFromImg(r1[rows.r1.mid] || null),
-      bot: this.getFileNameFromImg(r1[rows.r1.bot] || null),
-    },
-    r2: {
-      top: this.getFileNameFromImg(r2[rows.r2.top] || null),
-      mid: this.getFileNameFromImg(r2[rows.r2.mid] || null),
-      bot: this.getFileNameFromImg(r2[rows.r2.bot] || null),
-    },
-    r3: {
-      top: this.getFileNameFromImg(r3[rows.r3.top] || null),
-      mid: this.getFileNameFromImg(r3[rows.r3.mid] || null),
-      bot: this.getFileNameFromImg(r3[rows.r3.bot] || null),
-    },
-  };
-}
+  private getRowFiles(rows: { r1: { top: number, mid: number, bot: number }, r2: { top: number, mid: number, bot: number }, r3: { top: number, mid: number, bot: number } }) {
+    const el = (id: string) => document.getElementById(id);
+    const imgsFor = (id: string) => {
+      const nodeList = el(id)?.querySelectorAll<HTMLImageElement>('img.symbol-img');
+      return nodeList ? Array.from(nodeList) as HTMLImageElement[] : [] as HTMLImageElement[];
+    };
+    const r1 = imgsFor('reel1');
+    const r2 = imgsFor('reel2');
+    const r3 = imgsFor('reel3');
+    return {
+      r1: {
+        top: this.getFileNameFromImg(r1[rows.r1.top] || null),
+        mid: this.getFileNameFromImg(r1[rows.r1.mid] || null),
+        bot: this.getFileNameFromImg(r1[rows.r1.bot] || null),
+      },
+      r2: {
+        top: this.getFileNameFromImg(r2[rows.r2.top] || null),
+        mid: this.getFileNameFromImg(r2[rows.r2.mid] || null),
+        bot: this.getFileNameFromImg(r2[rows.r2.bot] || null),
+      },
+      r3: {
+        top: this.getFileNameFromImg(r3[rows.r3.top] || null),
+        mid: this.getFileNameFromImg(r3[rows.r3.mid] || null),
+        bot: this.getFileNameFromImg(r3[rows.r3.bot] || null),
+      },
+    };
+  }
 
   // Popup helpers
   private computeSummary() {
@@ -686,6 +702,9 @@ export class GamblinLayoutComponent implements OnInit {
 
   openSummaryModal() {
     this.computeSummary();
+    this.thehousealwayswins.src = 'assets/thehousealwayswins.mp3';
+    this.thehousealwayswins.loop = true;
+    this.thehousealwayswins.play();
     this.showSummaryModal = true;
   }
 
@@ -695,6 +714,16 @@ export class GamblinLayoutComponent implements OnInit {
 
   resetAndPlayAgain() {
     // Reset to starting bankroll and allow playing again
+    this.playagain.src = 'assets/playagain.mp3';
+    this.newMoney.src = 'assets/newmoney.mp3';
+    this.playagain.play();
+    this.newMoney.play();
+    // Stop looping summary sound
+    try {
+      this.thehousealwayswins.loop = false;
+      this.thehousealwayswins.pause();
+      this.thehousealwayswins.currentTime = 0;
+    } catch {}
     this.money = this.startingMoney;
     this.spins = 0;
     this.showSummaryModal = false;

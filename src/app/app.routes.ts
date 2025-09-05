@@ -9,6 +9,6 @@ export const routes: Routes = [
   { path: 'slot-machine', redirectTo: '', pathMatch: 'full' },
   { path: 'about', component: AboutPageComponent },
   { path: 'why', component: WhyPageComponent },
-  { path: 'money', component: MoneyCounterComponent },
+  
 
 ];
