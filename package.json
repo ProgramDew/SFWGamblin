@@ -11,7 +11,8 @@
     "serve:ssr:angular": "node dist/angular/server/server.mjs",
     "build:gh": "ng build --configuration production --output-mode=static --prerender=false --base-href=/",
     "postbuild:gh": "node -e \"require('fs').copyFileSync('dist/angular/browser/index.html','dist/angular/browser/404.html')\"",
-    "deploy:gh": "npm run build:gh && npx angular-cli-ghpages --dir=dist/angular/browser --cname=sfwgamblin.space"
+    "deploy:gh": "node scripts/add-patch-note.mjs && npm run build:gh && npx angular-cli-ghpages --dir=dist/angular/browser --cname=sfwgamblin.space",
+    "generate:patchnotes": "node scripts/generate-patch-notes.mjs"
   },
   "dependencies": {
     "@angular/common": "^19.2.0",

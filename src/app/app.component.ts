@@ -5,11 +5,12 @@ import { GamblinLayoutComponent } from './gamblin-layout/gamblin-layout.componen
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { AboutPageComponent } from './about-page/about-page.component';
+import { PatchNotesOverlayComponent } from './patch-notes/patch-notes-overlay.component';
 
 
 @Component({
   selector: 'app-root',
-  imports: [HeaderComponent, GamblinLayoutComponent, RouterOutlet, RouterLink],
+  imports: [HeaderComponent, GamblinLayoutComponent, RouterOutlet, RouterLink, PatchNotesOverlayComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

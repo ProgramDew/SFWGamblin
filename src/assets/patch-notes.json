@@ -1,0 +1,66 @@
+{
+  "version": "0.0.0",
+  "updatedAt": "2025-09-05",
+  "entries": [
+    {
+      "title": "Inital Commit",
+      "details": [
+        "Commit 1c2798c6 on 2025-09-05"
+      ]
+    },
+    {
+      "title": "Merge pull request #2 from ProgramDew/money",
+      "details": [
+        "Commit 5395bc05 on 2025-09-05"
+      ]
+    },
+    {
+      "title": "Sound und Testing",
+      "details": [
+        "Commit 75cb9331 on 2025-09-05"
+      ]
+    },
+    {
+      "title": "Stake and End Screen",
+      "details": [
+        "Commit abfa93bd on 2025-09-05"
+      ]
+    },
+    {
+      "title": "Points not centered fix and new stake buttons added",
+      "details": [
+        "Commit aa5c462f on 2025-09-04"
+      ]
+    },
+    {
+      "title": "Merge pull request #1 from ProgramDew/experiment",
+      "details": [
+        "Commit 54f23dcf on 2025-09-02"
+      ]
+    },
+    {
+      "title": "Responsive Design and new Combo Indicator",
+      "details": [
+        "Commit d909d32e on 2025-09-02"
+      ]
+    },
+    {
+      "title": "package update",
+      "details": [
+        "Commit d0a9ec60 on 2025-09-02"
+      ]
+    },
+    {
+      "title": "branch switch",
+      "details": [
+        "Commit f9700c8d on 2025-08-29"
+      ]
+    },
+    {
+      "title": "Create CNAME",
+      "details": [
+        "Commit 0eabd5e3 on 2025-08-29"
+      ]
+    }
+  ]
+}
