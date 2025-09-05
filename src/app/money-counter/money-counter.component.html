@@ -1,6 +1,4 @@
 <div class="money-counter">
-  <span class="label">Balance:</span>
-  <span class="value">0</span>
-  <!-- Replace the placeholder text with your bound amount -->
-  <!-- e.g., <span class="value">{{ balance | currency }}</span> -->
+  <span class="value"> {{ displayMoney | number:'1.0-0' }}</span>
+  <img src="assets/coin.png" alt="" class="coin">
 </div>

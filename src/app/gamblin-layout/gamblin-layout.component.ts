@@ -1,4 +1,4 @@
-import {
+﻿import {
   Component,
   signal,
   computed,
@@ -10,12 +10,16 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { SYMBOLS } from './symbols';
+import { SpinsCounterComponent } from '../spins-counter/spins-counter.component';
 import { withModule } from '@angular/core/testing';
+import { MoneyCounterComponent } from '../money-counter/money-counter.component';
+import { interval } from 'rxjs';
 
 @Component({
   selector: 'app-gamblin-layout',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, SpinsCounterComponent, MoneyCounterComponent],
   templateUrl: './gamblin-layout.component.html',
   styleUrl: './gamblin-layout.component.css',
 })
@@ -26,10 +30,71 @@ export class GamblinLayoutComponent implements OnInit {
   isSpinning = false;
   resetting = false;
   firstTimePoints = true;
+
   /*  @Output() spinCounter = new EventEmitter<number>() */
   spins = 0;
 
   newPoints = 0;
+  // Stake controls
+  stake = 1;
+  stakeMin = 1;
+  stakeMax = 100;
+  stakeStep = 10;
+
+  private profit = 0;
+
+  money = 100;
+  // Track starting bankroll to compute overall loss
+  private startingMoney = 100;
+
+  // Simple, customizable popup config + state
+  showSummaryModal = false;
+  popupTitle = 'The House always wins!';
+  popupMessagePrefix = 'You spun';
+  popupMessageMiddle = 'times and gambled';
+  popupMessageSuffix = 'away.';
+  popupPrimaryText = 'Play Again';
+  popupSecondaryText = 'Close';
+  summarySpins = 0;
+  summaryLoss = 0;
+
+
+  increaseSound = new Audio();
+  decreaseSound = new Audio();
+
+  newMoney = new Audio();
+  outofmoney = new Audio();
+  playagain = new Audio();
+  thehousealwayswins = new Audio();
+  increaseStake() {
+    if (this.isSpinning) return;
+
+    this.increaseSound.src = 'assets/increase.mp3';
+    this.increaseSound.play();
+
+    if (this.stake === 1 && this.money != 0) {
+      this.stake = this.stake + 9;
+      return
+    }
+    this.stake = Math.min(this.stakeMax, this.stake + this.stakeStep);
+  }
+
+  decreaseStake() {
+    if (this.isSpinning) return;
+    this.decreaseSound.src = 'assets/decrease.mp3';
+    this.decreaseSound.play();
+    if (this.money === 0) this.stakeMin = 0;
+    this.stake = Math.max(this.stakeMin, this.stake - this.stakeStep);
+
+  }
+
+  onStakeChange() {
+    // Clamp manual edits
+    if (typeof this.stake !== 'number') {
+      this.stake = this.stakeMin;
+    }
+    this.stake = Math.max(this.stakeMin, Math.min(this.stake, this.stakeMax));
+  }
 
   symbolsOnReels: string[] = [];
   symbolsOnReels2: string[] = [];
@@ -41,6 +106,8 @@ export class GamblinLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('Init');
+    // Initialize starting bankroll for loss calculation
+    this.startingMoney = this.money;
     console.log(this.symbolsOnReels);
     const getRandomSymbol = () =>
       'assets/symbols/' +
@@ -49,6 +116,7 @@ export class GamblinLayoutComponent implements OnInit {
     this.fixedFirstThree1 = [...Array.from({ length: 3 }, getRandomSymbol)];
     this.fixedFirstThree2 = [...Array.from({ length: 3 }, getRandomSymbol)];
     this.fixedFirstThree3 = [...Array.from({ length: 3 }, getRandomSymbol)];
+
     this.randomizeSymbols();
   }
 
@@ -103,6 +171,15 @@ export class GamblinLayoutComponent implements OnInit {
   }
 
   spin() {
+    if (this.stake > this.money || this.money === 0 || this.stake === 0) {
+      if (this.money === 0) {
+        this.triggerBroke();
+      }
+      return;
+    }
+    console.log("Stake: " + this.stake)
+    console.log("Money Before: " + this.money)
+
     this.spins++;
     localStorage.setItem('spinCounter', this.spins.toString());
     const slotssound = new Audio();
@@ -115,6 +192,8 @@ export class GamblinLayoutComponent implements OnInit {
     if (this.isSpinning === false) {
       this.isSpinning = true;
       slotssound.play();
+      this.money = this.money - this.stake;
+      console.log("Money After: " + this.money);
       document.querySelector('.start button')?.classList.add('disabled');
 
       document
@@ -199,13 +278,17 @@ export class GamblinLayoutComponent implements OnInit {
         this.isSpinning = false;
         document.querySelector('.start button')?.classList.remove('disabled');
         this.firstTimePoints == true;
+        // If balance is depleted after resolving wins, trigger broke overlay
+        if (this.money <= 0) {
+          this.triggerBroke();
+        }
       }, 6000);
     }
   }
 
   checkResults() {
     let jackpot = 0;
-    const highlight = (cells: Array<{ reel: 'reel1'|'reel2'|'reel3'; idx: number }>) => {
+    const highlight = (cells: Array<{ reel: 'reel1' | 'reel2' | 'reel3'; idx: number }>) => {
       for (const c of cells) {
         const reel = document.getElementById(c.reel);
         if (!reel) continue;
@@ -296,6 +379,8 @@ export class GamblinLayoutComponent implements OnInit {
 
   jackpotActive = false;
   private jackpotTimer?: any;
+  brokeActive = false;
+  private brokeTimer?: any;
 
   private triggerJackpot(durationMs = 2500) {
     this.jackpotActive = true;
@@ -304,6 +389,23 @@ export class GamblinLayoutComponent implements OnInit {
       () => (this.jackpotActive = false),
       durationMs
     );
+  }
+
+  private triggerBroke(durationMs = 3000) {
+    try {
+      const loseSound = new Audio();
+      loseSound.src = 'assets/loose.mp3';
+      this.outofmoney.src = 'assets/outofmoney.mp3';
+      this.outofmoney.play().catch(() => { });
+      loseSound.play().catch(() => { });
+    } catch { }
+    this.brokeActive = true;
+    clearTimeout(this.brokeTimer);
+    this.brokeTimer = setTimeout(() => {
+      this.brokeActive = false;
+      // After the broke animation completes, show session summary popup
+      this.openSummaryModal();
+    }, durationMs);
   }
 
   setupNextSpin() {
@@ -321,10 +423,12 @@ export class GamblinLayoutComponent implements OnInit {
     this.fixedFirstThree3[1] = this.symbolsOnReels3[rows.r3.mid];
     this.fixedFirstThree3[2] = this.symbolsOnReels3[rows.r3.bot];
 
-    console.log('Neue Startsymbole für nächsten Spin:');
+    console.log('Neue Startsymbole fÃ¼r nÃ¤chsten Spin:');
     console.log('Reel1:', this.fixedFirstThree1);
     console.log('Reel2:', this.fixedFirstThree2);
     console.log('Reel3:', this.fixedFirstThree3);
+
+    this.stakeMax = this.money;
   }
 
   // Determine the visible indices for top/middle/bottom rows of each reel
@@ -371,44 +475,73 @@ export class GamblinLayoutComponent implements OnInit {
     return this.symbols.find((s) => s.img === file);
   }
 
+  /**
+   * Calculate the payout for a spin and treat it as MONEY.
+   *
+   * How it works in simple steps:
+   *  1) For each winning line we start from a base amount (basePayoutPerLine).
+   *  2) We scale that amount by the symbol's rarity: rarer = pays more.
+   *     Rarity is derived from weights: lower weight -> higher multiplier.
+   *  3) If multiple lines win, apply a combo bonus (+20% per extra line).
+   *  4) Apply your chosen stake as a final multiplier.
+   *  5) Update the UI counters (newPoints/shownPoints) which now represent money.
+   */
   calculatePoints(wins: string[]) {
-    const winsound = new Audio();
-    const jackpotsound = new Audio();
-    winsound.src = 'assets/win.mp3';
-    jackpotsound.src = 'assets/jackpot.mp3';
+    // Sounds
+    const winSound = new Audio();
+    const jackpotSound = new Audio();
+    winSound.src = 'assets/win.mp3';
+    jackpotSound.src = 'assets/jackpot.mp3';
 
-    if (!wins || wins.length === 0) return;
-
-    const totalWeight = this.symbols.reduce((sum, s) => sum + s.weight, 0);
-    const avgWeight = totalWeight / this.symbols.length;
-    const basePerLine = 100;
-
-    // Punkte pro Linie: seltener = mehr Punkte
-    const perLinePoints = wins.map((path) => {
-      const sym = this.getSymbolFromPath(path);
-      const w = sym?.weight ?? avgWeight; // Fallback just in case
-      const rarityMultiplier = avgWeight / w; // weight klein -> multiplier groß
-      return Math.round(basePerLine * rarityMultiplier);
-    });
-
-    // Summe + kleiner Kombi-Bonus (20% je zusätzliche Linie)
-    let points = perLinePoints.reduce((a, b) => a + b, 0);
-    const comboBonus = 1 + 0.2 * (wins.length - 1);
-    points = Math.round(points * comboBonus);
-
-    // Optional: Jackpot Multiplikator
-    if (wins.length === 8) {
-      points *= 50;
-      jackpotsound.play();
+    // No wins → no payout
+    if (!wins || wins.length === 0) {
+      return;
     }
 
-    this.newPoints = points;
+    // 1) Base values
+    const totalSymbolWeight = this.symbols.reduce((sum, symbol) => sum + symbol.weight, 0);
+    const averageSymbolWeight = totalSymbolWeight / this.symbols.length;
+    const basePayoutPerWinningLine = 10; // baseline money for an average symbol
+
+    // 2) Compute payout for each winning line using rarity
+    const perWinningLinePayouts: number[] = [];
+    for (const symbolPath of wins) {
+      const symbol = this.getSymbolFromPath(symbolPath);
+      const symbolWeight = symbol?.weight ?? averageSymbolWeight; // fallback if unknown
+      const rarityMultiplier = averageSymbolWeight / symbolWeight; // lower weight → higher payout
+      const linePayout = Math.round(basePayoutPerWinningLine * rarityMultiplier);
+      perWinningLinePayouts.push(linePayout);
+    }
+
+    // 3) Sum payouts and apply combo bonus (+20% per additional line)
+    let sumOfLinePayouts = 0;
+    for (const amount of perWinningLinePayouts) {
+      sumOfLinePayouts += amount;
+    }
+    const comboBonusMultiplier = 1 + 0.2 * Math.max(0, wins.length - 1);
+    let totalPayout = Math.round(sumOfLinePayouts * comboBonusMultiplier);
+
+    // 4) Jackpot bonus when all 8 lines win
+    const hitJackpot = wins.length === 8;
+    if (hitJackpot) {
+      totalPayout *= 50;
+      jackpotSound.play();
+    }
+
+    // 5) Apply stake (final multiplier)
+    const stakeMultiplier = Math.max(this.stakeMin, this.stake);
+    totalPayout *= Math.floor(stakeMultiplier / 3.5) + 1;
+
+    // 6) Update UI counters and balance
+    this.newPoints = totalPayout; // used for the on-screen +money animation
+    this.profit += this.newPoints - this.stake;
 
     setTimeout(() => {
-      this.shownPoints += points;
+      this.shownPoints += totalPayout; // visual overlay total
+      this.money += totalPayout;       // real balance shown in MoneyCounter
     }, 600);
 
-    winsound.play();
+    winSound.play();
   }
 
   // Compute travel distance based on actual DOM sizes to avoid overshooting on small screens
@@ -444,7 +577,7 @@ export class GamblinLayoutComponent implements OnInit {
     return r.left + r.width / 2;
   }
 
-  private rowCenterY(row: 'top'|'mid'|'bot') {
+  private rowCenterY(row: 'top' | 'mid' | 'bot') {
     const rows = this.getVisibleRowIndices();
     const reel = document.getElementById('reel2'); // use middle reel for Y
     if (!reel) return 0;
@@ -456,7 +589,7 @@ export class GamblinLayoutComponent implements OnInit {
     return r.top + r.height / 2;
   }
 
-  private positionHorizontal(selector: string, row: 'top'|'mid'|'bot') {
+  private positionHorizontal(selector: string, row: 'top' | 'mid' | 'bot') {
     const rects = this.getRects();
     if (!rects) return;
     const { machineRect, slotsRect } = rects;
@@ -470,7 +603,7 @@ export class GamblinLayoutComponent implements OnInit {
     el.style.height = `${thick}px`;
   }
 
-  private positionVertical(selector: string, reelId: 'reel1'|'reel2'|'reel3') {
+  private positionVertical(selector: string, reelId: 'reel1' | 'reel2' | 'reel3') {
     const rects = this.getRects();
     if (!rects) return;
     const { machineRect, slotsRect } = rects;
@@ -485,7 +618,7 @@ export class GamblinLayoutComponent implements OnInit {
   }
 
 
-  private positionDiagonal(selector: string, startReel: 'reel1'|'reel2'|'reel3', startRow: 'top'|'mid'|'bot', endReel: 'reel1'|'reel2'|'reel3', endRow: 'top'|'mid'|'bot') {
+  private positionDiagonal(selector: string, startReel: 'reel1' | 'reel2' | 'reel3', startRow: 'top' | 'mid' | 'bot', endReel: 'reel1' | 'reel2' | 'reel3', endRow: 'top' | 'mid' | 'bot') {
     const rects = this.getRects();
     if (!rects) return;
     const { machineRect } = rects;
@@ -495,7 +628,7 @@ export class GamblinLayoutComponent implements OnInit {
     const y2 = this.rowCenterY(endRow) - machineRect.top;
     const dx = x2 - x1;
     const dy = y2 - y1;
-    const len = Math.sqrt(dx*dx + dy*dy);
+    const len = Math.sqrt(dx * dx + dy * dy);
     const angle = Math.atan2(dy, dx) * 180 / Math.PI;
     const thick = this.getLineThicknessPx();
     const el = document.querySelector(selector) as HTMLElement | null;
@@ -515,50 +648,92 @@ export class GamblinLayoutComponent implements OnInit {
 
   private repositionOverlays() {
     // Always compute positions so lines stay correct across resizes
-    this.positionHorizontal('.overlay-line-top','top');
-    this.positionHorizontal('.overlay-line-middle','mid');
-    this.positionHorizontal('.overlay-line-down','bot');
-    this.positionVertical('.overlay-line-vertical1','reel1');
-    this.positionVertical('.overlay-line-vertical2','reel2');
-    this.positionVertical('.overlay-line-vertical3','reel3');
-    this.positionDiagonal('.overlay-line-diagonal1','reel1','top','reel3','bot');
-    this.positionDiagonal('.overlay-line-diagonal2','reel3','top','reel1','bot');
+    this.positionHorizontal('.overlay-line-top', 'top');
+    this.positionHorizontal('.overlay-line-middle', 'mid');
+    this.positionHorizontal('.overlay-line-down', 'bot');
+    this.positionVertical('.overlay-line-vertical1', 'reel1');
+    this.positionVertical('.overlay-line-vertical2', 'reel2');
+    this.positionVertical('.overlay-line-vertical3', 'reel3');
+    this.positionDiagonal('.overlay-line-diagonal1', 'reel1', 'top', 'reel3', 'bot');
+    this.positionDiagonal('.overlay-line-diagonal2', 'reel3', 'top', 'reel1', 'bot');
   }
 
   private getFileNameFromImg(img: HTMLImageElement | null): string {
     if (!img) return '';
     const src = img.getAttribute('src') || (img as any).src || '';
     const file = src.split('/').pop() || '';
-    return file.split('?' )[0];
+    return file.split('?')[0];
   }
 
-  private getRowFiles(rows: { r1: {top:number,mid:number,bot:number}, r2: {top:number,mid:number,bot:number}, r3: {top:number,mid:number,bot:number} }) {
-  const el = (id: string) => document.getElementById(id);
-  const imgsFor = (id: string) => {
-    const nodeList = el(id)?.querySelectorAll<HTMLImageElement>('img.symbol-img');
-    return nodeList ? Array.from(nodeList) as HTMLImageElement[] : [] as HTMLImageElement[];
-  };
-  const r1 = imgsFor('reel1');
-  const r2 = imgsFor('reel2');
-  const r3 = imgsFor('reel3');
-  return {
-    r1: {
-      top: this.getFileNameFromImg(r1[rows.r1.top] || null),
-      mid: this.getFileNameFromImg(r1[rows.r1.mid] || null),
-      bot: this.getFileNameFromImg(r1[rows.r1.bot] || null),
-    },
-    r2: {
-      top: this.getFileNameFromImg(r2[rows.r2.top] || null),
-      mid: this.getFileNameFromImg(r2[rows.r2.mid] || null),
-      bot: this.getFileNameFromImg(r2[rows.r2.bot] || null),
-    },
-    r3: {
-      top: this.getFileNameFromImg(r3[rows.r3.top] || null),
-      mid: this.getFileNameFromImg(r3[rows.r3.mid] || null),
-      bot: this.getFileNameFromImg(r3[rows.r3.bot] || null),
-    },
-  };
-}
+  private getRowFiles(rows: { r1: { top: number, mid: number, bot: number }, r2: { top: number, mid: number, bot: number }, r3: { top: number, mid: number, bot: number } }) {
+    const el = (id: string) => document.getElementById(id);
+    const imgsFor = (id: string) => {
+      const nodeList = el(id)?.querySelectorAll<HTMLImageElement>('img.symbol-img');
+      return nodeList ? Array.from(nodeList) as HTMLImageElement[] : [] as HTMLImageElement[];
+    };
+    const r1 = imgsFor('reel1');
+    const r2 = imgsFor('reel2');
+    const r3 = imgsFor('reel3');
+    return {
+      r1: {
+        top: this.getFileNameFromImg(r1[rows.r1.top] || null),
+        mid: this.getFileNameFromImg(r1[rows.r1.mid] || null),
+        bot: this.getFileNameFromImg(r1[rows.r1.bot] || null),
+      },
+      r2: {
+        top: this.getFileNameFromImg(r2[rows.r2.top] || null),
+        mid: this.getFileNameFromImg(r2[rows.r2.mid] || null),
+        bot: this.getFileNameFromImg(r2[rows.r2.bot] || null),
+      },
+      r3: {
+        top: this.getFileNameFromImg(r3[rows.r3.top] || null),
+        mid: this.getFileNameFromImg(r3[rows.r3.mid] || null),
+        bot: this.getFileNameFromImg(r3[rows.r3.bot] || null),
+      },
+    };
+  }
+
+  // Popup helpers
+  private computeSummary() {
+    this.summarySpins = this.spins;
+    // Overall loss = starting bankroll - current money (clamped at 0)
+    this.summaryLoss = this.profit + this.startingMoney;
+  }
+
+  openSummaryModal() {
+    this.computeSummary();
+    this.thehousealwayswins.src = 'assets/thehousealwayswins.mp3';
+    this.thehousealwayswins.loop = true;
+    this.thehousealwayswins.play();
+    this.showSummaryModal = true;
+  }
+
+  closeSummaryModal() {
+    this.showSummaryModal = false;
+  }
+
+  resetAndPlayAgain() {
+    // Reset to starting bankroll and allow playing again
+    this.playagain.src = 'assets/playagain.mp3';
+    this.newMoney.src = 'assets/newmoney.mp3';
+    this.playagain.play();
+    this.newMoney.play();
+    // Stop looping summary sound
+    try {
+      this.thehousealwayswins.loop = false;
+      this.thehousealwayswins.pause();
+      this.thehousealwayswins.currentTime = 0;
+    } catch {}
+    this.money = this.startingMoney;
+    this.spins = 0;
+    this.showSummaryModal = false;
+    // Also allow stake to be at least 1 again
+    this.stakeMin = 1;
+    this.stakeMax = this.money
+    this.shownPoints = 0;
+    this.profit = 0;
+    this.newPoints = 0;
+  }
 }
 
 
