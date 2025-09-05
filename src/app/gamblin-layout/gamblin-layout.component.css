@@ -327,6 +327,7 @@ img.symbol-img {
   height: clamp(4px, 2vmin, 25px);
   background-color: #a62c37;
   z-index: 9999;
+  pointer-events: none;
   opacity: 0;
 }
 
@@ -344,6 +345,7 @@ img.symbol-img {
   height: clamp(4px, 2vmin, 25px);
   background-color: #a62c37;
   z-index: 9999;
+  pointer-events: none;
   opacity: 0;
 }
 
@@ -361,6 +363,7 @@ img.symbol-img {
   height: clamp(4px, 2vmin, 25px);
   background-color: #a62c37;
   z-index: 9999;
+  pointer-events: none;
   opacity: 0;
 }
 
@@ -378,6 +381,7 @@ img.symbol-img {
   height: 0;
   background-color: #a62c37;
   z-index: 9999;
+  pointer-events: none;
   opacity: 0;
 }
 
@@ -395,6 +399,7 @@ img.symbol-img {
   height: 0;
   background-color: #a62c37;
   z-index: 9999;
+  pointer-events: none;
   opacity: 0;
 }
 
@@ -412,6 +417,7 @@ img.symbol-img {
   height: 0;
   background-color: #a62c37;
   z-index: 9999;
+  pointer-events: none;
   opacity: 0;
 }
 
@@ -600,11 +606,12 @@ img.symbol-img {
   place-items: center;
   z-index: 10000;
   opacity: 0;
+  pointer-events: none; /* don't block UI when hidden */
   transition: opacity .3s ease;
   background: radial-gradient(ellipse at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.8) 100%);
 
 }
-.broke-overlay.active { opacity: 1; animation: broke-flash 280ms ease-out; }
+.broke-overlay.active { opacity: 1; pointer-events: auto; animation: broke-flash 280ms ease-out; }
 @keyframes broke-flash {
   0%   { background-color: rgba(0,0,0,0); }
   25%  { background-color: rgba(166,44,55,0.35); }
