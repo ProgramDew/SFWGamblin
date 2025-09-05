@@ -1,4 +1,4 @@
-import {
+﻿import {
   Component,
   signal,
   computed,
@@ -10,14 +10,16 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { SYMBOLS } from './symbols';
 import { SpinsCounterComponent } from '../spins-counter/spins-counter.component';
 import { withModule } from '@angular/core/testing';
 import { MoneyCounterComponent } from '../money-counter/money-counter.component';
+import { interval } from 'rxjs';
 
 @Component({
   selector: 'app-gamblin-layout',
-  imports: [CommonModule, SpinsCounterComponent, MoneyCounterComponent],
+  imports: [CommonModule, FormsModule, SpinsCounterComponent, MoneyCounterComponent],
   templateUrl: './gamblin-layout.component.html',
   styleUrl: './gamblin-layout.component.css',
 })
@@ -28,10 +30,57 @@ export class GamblinLayoutComponent implements OnInit {
   isSpinning = false;
   resetting = false;
   firstTimePoints = true;
+
   /*  @Output() spinCounter = new EventEmitter<number>() */
   spins = 0;
 
   newPoints = 0;
+  // Stake controls
+  stake = 1;
+  stakeMin = 1;
+  stakeMax = 100;
+  stakeStep = 10;
+
+  private profit = 0;
+
+  money = 100;
+  // Track starting bankroll to compute overall loss
+  private startingMoney = 100;
+
+  // Simple, customizable popup config + state
+  showSummaryModal = false;
+  popupTitle = 'The House always wins!';
+  popupMessagePrefix = 'You spun';
+  popupMessageMiddle = 'times and gambled';
+  popupMessageSuffix = 'away.';
+  popupPrimaryText = 'Play Again';
+  popupSecondaryText = 'Close';
+  summarySpins = 0;
+  summaryLoss = 0;
+
+  increaseStake() {
+    if (this.isSpinning) return;
+    if (this.stake === 1 && this.money != 0){
+      this.stake = this.stake + 9;
+      return
+    }
+    this.stake = Math.min(this.stakeMax, this.stake + this.stakeStep);
+  }
+
+  decreaseStake() {
+    if (this.isSpinning) return;
+    if (this.money === 0) this.stakeMin = 0;
+    this.stake = Math.max(this.stakeMin, this.stake - this.stakeStep);
+    
+  }
+
+  onStakeChange() {
+    // Clamp manual edits
+    if (typeof this.stake !== 'number') {
+      this.stake = this.stakeMin;
+    }
+    this.stake = Math.max(this.stakeMin, Math.min(this.stake, this.stakeMax));
+  }
 
   symbolsOnReels: string[] = [];
   symbolsOnReels2: string[] = [];
@@ -43,6 +92,8 @@ export class GamblinLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('Init');
+    // Initialize starting bankroll for loss calculation
+    this.startingMoney = this.money;
     console.log(this.symbolsOnReels);
     const getRandomSymbol = () =>
       'assets/symbols/' +
@@ -51,6 +102,7 @@ export class GamblinLayoutComponent implements OnInit {
     this.fixedFirstThree1 = [...Array.from({ length: 3 }, getRandomSymbol)];
     this.fixedFirstThree2 = [...Array.from({ length: 3 }, getRandomSymbol)];
     this.fixedFirstThree3 = [...Array.from({ length: 3 }, getRandomSymbol)];
+
     this.randomizeSymbols();
   }
 
@@ -105,6 +157,15 @@ export class GamblinLayoutComponent implements OnInit {
   }
 
   spin() {
+    if (this.stake > this.money || this.money === 0 || this.stake === 0){
+      if (this.money === 0) {
+        this.triggerBroke();
+      }
+      return;
+    }
+    console.log("Stake: " + this.stake)
+    console.log("Money Before: " + this.money)
+
     this.spins++;
     localStorage.setItem('spinCounter', this.spins.toString());
     const slotssound = new Audio();
@@ -117,6 +178,8 @@ export class GamblinLayoutComponent implements OnInit {
     if (this.isSpinning === false) {
       this.isSpinning = true;
       slotssound.play();
+      this.money = this.money - this.stake;
+      console.log("Money After: " + this.money);
       document.querySelector('.start button')?.classList.add('disabled');
 
       document
@@ -201,6 +264,10 @@ export class GamblinLayoutComponent implements OnInit {
         this.isSpinning = false;
         document.querySelector('.start button')?.classList.remove('disabled');
         this.firstTimePoints == true;
+        // If balance is depleted after resolving wins, trigger broke overlay
+        if (this.money <= 0) {
+          this.triggerBroke();
+        }
       }, 6000);
     }
   }
@@ -298,6 +365,8 @@ export class GamblinLayoutComponent implements OnInit {
 
   jackpotActive = false;
   private jackpotTimer?: any;
+  brokeActive = false;
+  private brokeTimer?: any;
 
   private triggerJackpot(durationMs = 2500) {
     this.jackpotActive = true;
@@ -306,6 +375,21 @@ export class GamblinLayoutComponent implements OnInit {
       () => (this.jackpotActive = false),
       durationMs
     );
+  }
+
+  private triggerBroke(durationMs = 3000) {
+    try {
+      const loseSound = new Audio();
+      loseSound.src = 'assets/loose.mp3';
+      loseSound.play().catch(() => {});
+    } catch {}
+    this.brokeActive = true;
+    clearTimeout(this.brokeTimer);
+    this.brokeTimer = setTimeout(() => {
+      this.brokeActive = false;
+      // After the broke animation completes, show session summary popup
+      this.openSummaryModal();
+    }, durationMs);
   }
 
   setupNextSpin() {
@@ -323,10 +407,12 @@ export class GamblinLayoutComponent implements OnInit {
     this.fixedFirstThree3[1] = this.symbolsOnReels3[rows.r3.mid];
     this.fixedFirstThree3[2] = this.symbolsOnReels3[rows.r3.bot];
 
-    console.log('Neue Startsymbole für nächsten Spin:');
+    console.log('Neue Startsymbole fÃ¼r nÃ¤chsten Spin:');
     console.log('Reel1:', this.fixedFirstThree1);
     console.log('Reel2:', this.fixedFirstThree2);
     console.log('Reel3:', this.fixedFirstThree3);
+
+    this.stakeMax = this.money;
   }
 
   // Determine the visible indices for top/middle/bottom rows of each reel
@@ -373,44 +459,73 @@ export class GamblinLayoutComponent implements OnInit {
     return this.symbols.find((s) => s.img === file);
   }
 
+  /**
+   * Calculate the payout for a spin and treat it as MONEY.
+   *
+   * How it works in simple steps:
+   *  1) For each winning line we start from a base amount (basePayoutPerLine).
+   *  2) We scale that amount by the symbol's rarity: rarer = pays more.
+   *     Rarity is derived from weights: lower weight -> higher multiplier.
+   *  3) If multiple lines win, apply a combo bonus (+20% per extra line).
+   *  4) Apply your chosen stake as a final multiplier.
+   *  5) Update the UI counters (newPoints/shownPoints) which now represent money.
+   */
   calculatePoints(wins: string[]) {
-    const winsound = new Audio();
-    const jackpotsound = new Audio();
-    winsound.src = 'assets/win.mp3';
-    jackpotsound.src = 'assets/jackpot.mp3';
+    // Sounds
+    const winSound = new Audio();
+    const jackpotSound = new Audio();
+    winSound.src = 'assets/win.mp3';
+    jackpotSound.src = 'assets/jackpot.mp3';
 
-    if (!wins || wins.length === 0) return;
-
-    const totalWeight = this.symbols.reduce((sum, s) => sum + s.weight, 0);
-    const avgWeight = totalWeight / this.symbols.length;
-    const basePerLine = 100;
-
-    // Punkte pro Linie: seltener = mehr Punkte
-    const perLinePoints = wins.map((path) => {
-      const sym = this.getSymbolFromPath(path);
-      const w = sym?.weight ?? avgWeight; // Fallback just in case
-      const rarityMultiplier = avgWeight / w; // weight klein -> multiplier groß
-      return Math.round(basePerLine * rarityMultiplier);
-    });
-
-    // Summe + kleiner Kombi-Bonus (20% je zusätzliche Linie)
-    let points = perLinePoints.reduce((a, b) => a + b, 0);
-    const comboBonus = 1 + 0.2 * (wins.length - 1);
-    points = Math.round(points * comboBonus);
-
-    // Optional: Jackpot Multiplikator
-    if (wins.length === 8) {
-      points *= 50;
-      jackpotsound.play();
+    // No wins → no payout
+    if (!wins || wins.length === 0) {
+      return;
     }
 
-    this.newPoints = points;
+    // 1) Base values
+    const totalSymbolWeight = this.symbols.reduce((sum, symbol) => sum + symbol.weight, 0);
+    const averageSymbolWeight = totalSymbolWeight / this.symbols.length;
+    const basePayoutPerWinningLine = 10; // baseline money for an average symbol
+
+    // 2) Compute payout for each winning line using rarity
+    const perWinningLinePayouts: number[] = [];
+    for (const symbolPath of wins) {
+      const symbol = this.getSymbolFromPath(symbolPath);
+      const symbolWeight = symbol?.weight ?? averageSymbolWeight; // fallback if unknown
+      const rarityMultiplier = averageSymbolWeight / symbolWeight; // lower weight → higher payout
+      const linePayout = Math.round(basePayoutPerWinningLine * rarityMultiplier);
+      perWinningLinePayouts.push(linePayout);
+    }
+
+    // 3) Sum payouts and apply combo bonus (+20% per additional line)
+    let sumOfLinePayouts = 0;
+    for (const amount of perWinningLinePayouts) {
+      sumOfLinePayouts += amount;
+    }
+    const comboBonusMultiplier = 1 + 0.2 * Math.max(0, wins.length - 1);
+    let totalPayout = Math.round(sumOfLinePayouts * comboBonusMultiplier);
+
+    // 4) Jackpot bonus when all 8 lines win
+    const hitJackpot = wins.length === 8;
+    if (hitJackpot) {
+      totalPayout *= 50;
+      jackpotSound.play();
+    }
+
+    // 5) Apply stake (final multiplier)
+    const stakeMultiplier = Math.max(this.stakeMin, this.stake);
+    totalPayout *=  Math.floor(stakeMultiplier/3.5)+1;
+
+    // 6) Update UI counters and balance
+    this.newPoints = totalPayout; // used for the on-screen +money animation
+    this.profit += this.newPoints - this.stake;
 
     setTimeout(() => {
-      this.shownPoints += points;
+      this.shownPoints += totalPayout; // visual overlay total
+      this.money += totalPayout;       // real balance shown in MoneyCounter
     }, 600);
 
-    winsound.play();
+    winSound.play();
   }
 
   // Compute travel distance based on actual DOM sizes to avoid overshooting on small screens
@@ -561,6 +676,35 @@ export class GamblinLayoutComponent implements OnInit {
     },
   };
 }
+
+  // Popup helpers
+  private computeSummary() {
+    this.summarySpins = this.spins;
+    // Overall loss = starting bankroll - current money (clamped at 0)
+    this.summaryLoss = this.profit + this.startingMoney;
+  }
+
+  openSummaryModal() {
+    this.computeSummary();
+    this.showSummaryModal = true;
+  }
+
+  closeSummaryModal() {
+    this.showSummaryModal = false;
+  }
+
+  resetAndPlayAgain() {
+    // Reset to starting bankroll and allow playing again
+    this.money = this.startingMoney;
+    this.spins = 0;
+    this.showSummaryModal = false;
+    // Also allow stake to be at least 1 again
+    this.stakeMin = 1;
+    this.stakeMax = this.money
+    this.shownPoints = 0;
+    this.profit = 0;
+    this.newPoints = 0;
+  }
 }
 
 

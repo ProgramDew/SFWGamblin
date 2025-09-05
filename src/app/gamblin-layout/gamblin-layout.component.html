@@ -1,4 +1,4 @@
-<div class="slot-stage" [class.shake-stage]="jackpotActive">
+<div class="slot-stage" [class.shake-stage]="jackpotActive || brokeActive" [class.broke-mode]="brokeActive">
   <div class="slot-machine">
     <div class="points-container"></div>
     <div class="new-points">+ {{ newPoints }}</div>
@@ -39,17 +39,63 @@
       <button (click)="spin()" [disabled]="isSpinning"></button>
     </div>
     <div class="stakes-control">
-      <button class="decrease">-</button>
-      <span>Stake</span>
-      <button class="increase">+</button>
+      <button class="decrease" (click)="decreaseStake()" [disabled]="isSpinning">−</button>
+      <div class="stake">
+        <label for="stakeInput">Stake</label>
+        <input
+          id="stakeInput"
+          type="number"
+          [min]="stakeMin"
+          [max]="stakeMax"
+          [step]="stakeStep"
+          [(ngModel)]="stake"
+          (change)="onStakeChange()"
+          [disabled]="isSpinning"
+        />
+      </div>
+      <button class="increase" (click)="increaseStake()" [disabled]="isSpinning">+</button>
     </div>
   </div>
+
   <app-spins-counter [count]="spins"></app-spins-counter>
-  <app-money-counter></app-money-counter>
+  <app-money-counter [money]="money"></app-money-counter>
 </div>
 <div class="jackpot-overlay" [class.active]="jackpotActive" aria-hidden="true">
   <div class="burst"></div>
   <div class="title">JACKPOT!</div>
   <div class="confetti layer-a"></div>
   <div class="confetti layer-b"></div>
+</div>
+
+<!-- Broke / Out-of-money overlay -->
+<div class="broke-overlay" [class.active]="brokeActive" aria-hidden="true">
+  <div class="vignette"></div>
+  <div class="coin-rain layer-a"></div>
+  <div class="coin-rain layer-b"></div>
+  <div class="title glitch">
+    You're out of money!
+    <span aria-hidden="true">You're out of money!</span>
+    <span aria-hidden="true">You're out of money!</span>
+  </div>
+  
+</div>
+
+<!-- Session summary modal -->
+<div class="summary-backdrop" *ngIf="showSummaryModal" (click)="closeSummaryModal()"></div>
+<div class="summary-modal" *ngIf="showSummaryModal" role="dialog" aria-modal="true" aria-labelledby="summaryTitle">
+  <div class="summary-card" (click)="$event.stopPropagation()">
+    <div class="summary-header">
+      <h2 id="summaryTitle">{{ popupTitle }}</h2>
+    </div>
+    <div class="summary-body">
+      <p>
+        {{ popupMessagePrefix }} <strong>{{ summarySpins }}</strong> {{ popupMessageMiddle }}
+        <strong>{{ summaryLoss | number:'1.0-0' }}</strong> {{ popupMessageSuffix }}
+      </p>
+    </div>
+    <div class="summary-actions">
+      <button class="primary" (click)="resetAndPlayAgain()">{{ popupPrimaryText }}</button>
+      <button class="secondary" (click)="closeSummaryModal()">{{ popupSecondaryText }}</button>
+    </div>
+  </div>
 </div>
